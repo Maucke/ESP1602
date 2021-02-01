@@ -1,5 +1,4 @@
 #include "OLedSPI.h" 
-
 #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager
 #include <ArduinoJson.h>
 #include <ESP8266HTTPClient.h> 
@@ -8,11 +7,12 @@
 #include <EEPROM.h>
 #include <sys/time.h>                   // struct timeval
 #include <time.h>               
-//#include <coredecls.h>                  // settimeofday_cb()
 
 Ticker ticker;
 Ticker binker;
 Ticker shaker;
+
+tm* crt;
 
 OLedSPI oled;
 bool shouldSaveConfig = false;
@@ -20,10 +20,6 @@ bool TimeFlag = false;
 bool WeatherFlag = false;
 void ICACHE_RAM_ATTR keyHandle();
 void ICACHE_RAM_ATTR shakeHandle();
-
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 13 // ESP32 DOES NOT DEFINE LED_BUILTIN
-#endif
  
 #define KEY_MENU 1
 #define KEY_SW 2
@@ -31,15 +27,12 @@ void ICACHE_RAM_ATTR shakeHandle();
 
 int keypress = 0;
 int shake = 0;
-int LED = LED_BUILTIN;
 
 char Address[7] = "110000";
 char Key[33] = "ac2f3457cc2d7928a8b4600e9759be1a";
 char Bid[20] = "49890113";
 
 #define IntTime     1
-unsigned int display_year = 0, display_month = 0, display_day = 0, display_week = 0, display_hour = 0, display_minute = 0, display_second = 0;
-String Week[] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday" };
 
 u16 ConvertWeatherNum(String data_content)
 {
@@ -132,6 +125,29 @@ String ConvertWindDir(String data_content)
   }
 }
 
+String now_weather;    //当前天气
+String now_temperature;    //当前温度
+String now_humidity;    //当前温度
+String now_wind_direction;   //当前风向
+String now_wind_power;   //当前风力
+String now_reporttime;   //当前风力
+String display_wind_power;
+//****赋值
+//第一天数据
+String first_week;
+String first_dayweather;
+String first_daytemp;
+String first_nighttemp;
+//第二天数据
+String second_week;
+String second_dayweather;
+String second_daytemp;
+String second_nighttemp;
+//第三天数据
+String third_week;
+String third_dayweather;
+String third_daytemp;
+String third_nighttemp;
 
 //****获取天气子函数 
 void get_weather() {
@@ -166,14 +182,14 @@ void get_weather() {
       const char* lives_0_reporttime = lives_0["reporttime"]; // "风力"
 
       //赋值，因为现在这些变量是在缓存区，一会将被清空
-      String now_weather = lives_0_weather;    //当前天气
-      String now_temperature = lives_0_temperature;    //当前温度
-      String now_humidity = lives_0_humidity;    //当前温度
-      String now_wind_direction = lives_0_winddirection;   //当前风向
-      String now_wind_power = lives_0_windpower;   //当前风力
-      String now_reporttime = lives_0_reporttime;   //当前风力
+      now_weather = lives_0_weather;    //当前天气
+      now_temperature = lives_0_temperature;    //当前温度
+      now_humidity = lives_0_humidity;    //当前温度
+      now_wind_direction = lives_0_winddirection;   //当前风向
+      now_wind_power = lives_0_windpower;   //当前风力
+      now_reporttime = lives_0_reporttime;   //当前风力
       now_reporttime = now_reporttime.substring(5, 19);   //当前风力
-      String display_wind_power = now_wind_power.substring(3, 6);
+      display_wind_power = now_wind_power.substring(3, 6);
     }
     http.end();
     delay(50);
@@ -208,20 +224,20 @@ void get_weather() {
 
       //****赋值
       //第一天数据
-      String first_week = forecasts_0_casts_1_week;
-      String first_dayweather = forecasts_0_casts_1_dayweather;
-      String first_daytemp = forecasts_0_casts_1_daytemp;
-      String first_nighttemp = forecasts_0_casts_1_nighttemp;
+      first_week = forecasts_0_casts_1_week;
+      first_dayweather = forecasts_0_casts_1_dayweather;
+      first_daytemp = forecasts_0_casts_1_daytemp;
+      first_nighttemp = forecasts_0_casts_1_nighttemp;
       //第二天数据
-      String second_week = forecasts_0_casts_2_week;
-      String second_dayweather = forecasts_0_casts_2_dayweather;
-      String second_daytemp = forecasts_0_casts_2_daytemp;
-      String second_nighttemp = forecasts_0_casts_2_nighttemp;
+      second_week = forecasts_0_casts_2_week;
+      second_dayweather = forecasts_0_casts_2_dayweather;
+      second_daytemp = forecasts_0_casts_2_daytemp;
+      second_nighttemp = forecasts_0_casts_2_nighttemp;
       //第三天数据
-      String third_week = forecasts_0_casts_3_week;
-      String third_dayweather = forecasts_0_casts_3_dayweather;
-      String third_daytemp = forecasts_0_casts_3_daytemp;
-      String third_nighttemp = forecasts_0_casts_3_nighttemp;
+      third_week = forecasts_0_casts_3_week;
+      third_dayweather = forecasts_0_casts_3_dayweather;
+      third_daytemp = forecasts_0_casts_3_daytemp;
+      third_nighttemp = forecasts_0_casts_3_nighttemp;
     }
     http.end();   //关闭与服务器的连接
     delay(10);
@@ -258,10 +274,11 @@ void get_time() {
       if(p->tm_year!=0)
       {
         
-      char s[100]; 
-      strftime(s, sizeof(s), "%Y-%m-%d %H:%M:%S", p);  
-      sprintf(buff,"%d-%s",serverTime,s);
-      Serial.println(buff);
+          char s[100]; 
+          strftime(s, sizeof(s), "%Y-%m-%d %H:%M:%S", p);  
+          //sprintf(buff,"%d-%s",serverTime,s);
+          //Serial.println(buff);
+          memcpy(&crt, &p, sizeof(p));
       }
     }
     http.end();
@@ -292,7 +309,6 @@ void get_fans() {
     }
     http.end();
   }
-  delay(100);
 }
 
 void keyHandle() {
@@ -330,11 +346,18 @@ void get_key()
 
 void tickerHandle() //到时间时需要执行的任务
 {
-  static int rollcount = 0;
-  //    Serial.println(millis()); //打印当前时间
-  if (!(++rollcount) % 300)
-    WeatherFlag = true;
-  TimeFlag = true;
+    crt->tm_sec++;
+    if (crt->tm_sec >= 60)
+    {
+        crt->tm_sec = 0;
+        crt->tm_min++;
+        if (crt->tm_min >= 60)
+        {
+            crt->tm_min = 0;
+            get_time();
+        }
+    }
+    Serial.println(crt->tm_sec);
 }
 
 void shakeHandle() //到时间时需要执行的任务
@@ -365,7 +388,6 @@ void setup() {
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   // put your setup code here, to run once:
   Serial.begin(115200);
-
   EEPROM.begin(1024);
   oled.init();
   //set led pin as output
@@ -376,10 +398,7 @@ void setup() {
   oled.sendString("Initialization",0,0,' ');
   oled.sendString("Succeed!",0,1,' ');
   delay(1000);
-  //WiFiManager
-  //Local intialization. Once its business is done, there is no need to keep it around
-  WiFiManager wm;
-  //reset settings - for testing
+  WiFiManager wm;//reset settings - for testing
   if (digitalRead(KEY_MENU) == LOW)
   {
     wm.resetSettings();
@@ -388,13 +407,9 @@ void setup() {
     oled.sendString("",0,1,' ');
     delay(1000);
   }
-  // 配置连接超时
-  wm.setConnectTimeout(60);
-  // 打印调试内容
-  wm.setDebugOutput(false);
-  // 设置最小信号强度
-  wm.setMinimumSignalQuality(30);
-  // 设置固定AP信息
+  wm.setConnectTimeout(60);  // 打印调试内容
+  wm.setDebugOutput(false); // 设置最小信号强度
+  wm.setMinimumSignalQuality(30); // 设置固定AP信息
 
   if (EEPROM.read(0))
   {
@@ -475,23 +490,39 @@ void setup() {
   attachInterrupt(KEY_SW, keyHandle, CHANGE);
   attachInterrupt(KEY_MODE, keyHandle, CHANGE);
 
+  oled.sendString("Get Time", 0, 0, ' ');
+  oled.sendString("NTP", 0, 1, ' ');
   get_time(); //开机取一次时间
+  oled.sendString("Get Weather", 0, 0, ' ');
+  oled.sendString("Addr:", 0, 1, ' ');
+  oled.sendString(Address, 5, 1, ' ');
   get_weather(); //开机取一次天气
+  oled.sendString("Get Bilibili", 0, 0, ' ');
+  oled.sendString("Bid:", 0, 1, ' ');
+  oled.sendString(Bid, 4, 1, ' ');
   get_fans();//获取数据
 
-  binker.attach(10, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
+  binker.attach(1, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
   shaker.attach_ms(10, shakeHandle); //初始化调度任务，每10毫秒执行一次shakeHandle()
-
+  oled.sendString("                ", 0, 0);  //Now includes the cursor position data (col, row)
+  oled.sendString("                ", 0, 1);  //Now includes the cursor position data (col, row)
 }
 
+char tempstr[50];
+char weektab[][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
 //time_t now;
 void loop() {
   // put your main code here, to run repeatedly
   get_key();//检测按键按下情况
-}
+  //oled.sendString(weektab[crt->tm_mday],12,0);  //Now includes the cursor position data (col, row)
+  //strftime(tempstr, sizeof(tempstr), "%Y-%m-%d",crt);
+  //oled.sendString(tempstr, 1, 0);  //Now includes the cursor position data (col, row)
 
-//    oled.animotion(displaystr,7,0,0);
-//    oled.sendString("2013-21-21",1,0);  //Now includes the cursor position data (col, row)
-//    oled.sendString("TUS",12,0);  //Now includes the cursor position data (col, row)
-//    oled.sendString("12.3c",11,1);  //Now includes the cursor position data (col, row)
-//    oled.refrash_Screen();
+  oled.sendString(ConvertWeather(now_weather).c_str(), 0, 0);
+  oled.sendString(now_temperature.c_str(), 8, 0);
+
+  strftime(tempstr, sizeof(tempstr), "%H:%M:%S",crt);
+  oled.animotion(tempstr,7,0,0);     
+  oled.refrash_Screen();
+  delay(30);
+}

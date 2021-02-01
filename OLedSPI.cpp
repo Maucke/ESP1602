@@ -744,14 +744,15 @@ void OLedSPI::sendString(const char *String, uint8_t col, uint8_t row)
 void OLedSPI::sendString(const char *String, uint8_t col, uint8_t row,char ch)
 {
   cursPos(col, row);
-  unsigned char i=0;
-  while(i<15)
+  int i=0;
+  while(String[i])
   {
-    if(String[i])
-      sendData(String[i]);      // *** Show String to OLED
-    else 
-      sendData(ch);
+    sendData(String[i]);      // *** Show String to OLED
     i++;
+  }
+  while (i < (15 - col))
+  {
+	  sendData(ch); i++;
   }
 }
 
