@@ -9,30 +9,33 @@
 #include <time.h>               
 
 Ticker ticker;
-Ticker binker;
 Ticker shaker;
 
 tm* crt;
+enum dis
+{
+    date = 0,
+    bfans,
+    weather,
+    weather1,
+    weather2,
+};
 
+dis mode = date;
+dis crtmode = date;
 OLedSPI oled;
 bool shouldSaveConfig = false;
-bool TimeFlag = false;
-bool WeatherFlag = false;
 void ICACHE_RAM_ATTR keyHandle();
 void ICACHE_RAM_ATTR shakeHandle();
  
-#define KEY_MENU 1
-#define KEY_SW 2
-#define KEY_MODE 3
+#define KEY_MENU 5
+#define KEY_SW 4
+#define KEY_MODE 0
 
-int keypress = 0;
 int shake = 0;
-
 char Address[7] = "110000";
 char Key[33] = "ac2f3457cc2d7928a8b4600e9759be1a";
 char Bid[20] = "49890113";
-
-#define IntTime     1
 
 u16 ConvertWeatherNum(String data_content)
 {
@@ -127,7 +130,9 @@ String ConvertWindDir(String data_content)
 
 String now_weather;    //当前天气
 String now_temperature;    //当前温度
+String now_temperatureunit;    //当前温度
 String now_humidity;    //当前温度
+String now_humidityunit;    //当前温度
 String now_wind_direction;   //当前风向
 String now_wind_power;   //当前风力
 String now_reporttime;   //当前风力
@@ -148,10 +153,9 @@ String third_week;
 String third_dayweather;
 String third_daytemp;
 String third_nighttemp;
-
+String Allweathermsg;
 //****获取天气子函数 
 void get_weather() {
-  delay(IntTime);
   if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
     //此处往下是取得实况天气的程序
     HTTPClient http;  //开始登陆 
@@ -184,7 +188,9 @@ void get_weather() {
       //赋值，因为现在这些变量是在缓存区，一会将被清空
       now_weather = lives_0_weather;    //当前天气
       now_temperature = lives_0_temperature;    //当前温度
+      now_temperatureunit = now_temperature + "c";
       now_humidity = lives_0_humidity;    //当前温度
+      now_humidityunit = now_humidity + "%";
       now_wind_direction = lives_0_winddirection;   //当前风向
       now_wind_power = lives_0_windpower;   //当前风力
       now_reporttime = lives_0_reporttime;   //当前风力
@@ -240,51 +246,45 @@ void get_weather() {
       third_nighttemp = forecasts_0_casts_3_nighttemp;
     }
     http.end();   //关闭与服务器的连接
-    delay(10);
+    delay(50);
   }
+  Allweathermsg = "Current Weather is " + ConvertWeather(now_weather) + "," + "Temp:" + now_temperatureunit + "," + "Humi:" + now_humidityunit + "," + "Wind Direction is " + ConvertWindDir(now_wind_direction) + ","\
+      + "Wind Power is "+ now_wind_power+","+"Update:"+ now_reporttime;
 }
-
-int week(int y, int m, int d)
-{
-  if (m == 1 || m == 2) m += 12, y = y - 1;
-  return (d + 2 * m + 3 * (m + 1) / 5 + y + y / 4 - y / 100 + y / 400 + 1) % 7;
-}
-
 
 //****获取时间子函数
 void get_time() {
-  if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
-    HTTPClient http;  //开始登陆 
-    //不要使用和下面相同的秘钥
-    http.begin("http://vv.video.qq.com/checktime?otype=json"); 
-    int httpCode = http.GET(); //赋值                               
-    if (httpCode > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
+    if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
+        HTTPClient http;  //开始登陆 
+        //不要使用和下面相同的秘钥
+        http.begin("http://vv.video.qq.com/checktime?otype=json");
+        int httpCode = http.GET(); //赋值                               
+        if (httpCode > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
 
-      char buff[300];
-      sscanf(http.getString().c_str(),"QZOutputJson=%s;",buff);
+            char buff[300];
+            sscanf(http.getString().c_str(), "QZOutputJson=%s;", buff);
 
-      const size_t capacity =128;
-      DynamicJsonBuffer jsonBuffer(capacity);
-      JsonObject& root = jsonBuffer.parseObject(buff);
+            const size_t capacity = 128;
+            DynamicJsonBuffer jsonBuffer(capacity);
+            JsonObject& root = jsonBuffer.parseObject(buff);
 
-      long serverTime = root["t"]; // 1610249263328
-      serverTime+=8*60*60;
-      tm *p;  
-      p=gmtime(&serverTime);  
-      if(p->tm_year!=0)
-      {
-        
-          char s[100]; 
-          strftime(s, sizeof(s), "%Y-%m-%d %H:%M:%S", p);  
-          //sprintf(buff,"%d-%s",serverTime,s);
-          //Serial.println(buff);
-          memcpy(&crt, &p, sizeof(p));
-      }
+            long serverTime = root["t"]; // 1610249263328
+            serverTime += 8 * 60 * 60;
+            tm* p;
+            p = gmtime(&serverTime);
+            if (p->tm_year != 0)
+            {
+                //char s[100]; 
+                //strftime(s, sizeof(s), "%Y-%m-%d %H:%M:%S", p);  
+                memcpy(&crt, &p, sizeof(p));
+            }
+        }
+        http.end();
+        delay(50);
     }
-    http.end();
-    delay(100);
-  }
 }
+
+String fans;
 void get_fans() {
   if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
     HTTPClient http;  //开始登陆 
@@ -304,10 +304,12 @@ void get_fans() {
       JsonObject& root = jsonBuffer.parseObject(resBuff);
 
       String msg = root["message"];
-      uint message = msg.toInt();;
-      String fans = root["data"]["follower"];
+      //uint message = msg.toInt();;
+      const char* fanstemp = root["data"]["follower"]; 
+      fans = fanstemp;
     }
     http.end();
+    delay(50);
   }
 }
 
@@ -316,50 +318,54 @@ void keyHandle() {
   {
     if (digitalRead(KEY_SW) == LOW)
     {
-      shake = 15;
-      keypress = 1;
+      shake = 10;
+      
+      if (mode == date)
+          mode = bfans;
+      else if (mode == bfans)
+          mode = weather;
+      else if (mode == weather)
+          mode = date;
+      MotionRun();
     }
     if (digitalRead(KEY_MENU) == LOW)
     {
-      shake = 15;
-      keypress = 2;
+      shake = 10;
     }
     if (digitalRead(KEY_MODE) == LOW)
     {
-      shake = 15;
-      keypress = 3;
+      shake = 10;
     }
   }
 }
 
-void get_key()
-{
-
-  switch (keypress)
-  {
-  case 1:break;
-  case 2:break;
-  case 3:break;
-  }
-  keypress = 0;
-}
+char timestr[40] = "";
+char datestr[40] = "";
 
 void tickerHandle() //到时间时需要执行的任务
 {
-    crt->tm_sec++;
-    if (crt->tm_sec >= 60)
+    static int blink = 0;
+    if (blink++ % 2)
     {
-        crt->tm_sec = 0;
-        crt->tm_min++;
-        if (crt->tm_min >= 60)
+        crt->tm_sec++;
+        if (crt->tm_sec >= 60)
         {
-            crt->tm_min = 0;
-            get_time();
+            crt->tm_sec = 0;
+            crt->tm_min++;
+            if (crt->tm_min >= 60)
+            {
+                crt->tm_min = 0;
+                get_time();
+                get_fans();
+                get_weather(); 
+            }
         }
+        strftime(timestr, sizeof(timestr), "%H:%M:%S", crt);
     }
-    Serial.println(crt->tm_sec);
+    else
+        strftime(timestr, sizeof(timestr), "%H %M %S", crt);
+    strftime(datestr, sizeof(datestr), "%Y-%m-%d", crt);
 }
-
 void shakeHandle() //到时间时需要执行的任务
 {
   if (shake > 0)
@@ -367,17 +373,12 @@ void shakeHandle() //到时间时需要执行的任务
 }
 
 
-//gets called when WiFiManager enters configuration mode
 void configModeCallback(WiFiManager* myWiFiManager) {
   Serial.println("Entered config mode");
   Serial.println(WiFi.softAPIP());
-  //if you used auto generated SSID, print it
   Serial.println(myWiFiManager->getConfigPortalSSID());
-  //entered config mode, make led toggle faster
 }
-/**
- * 功能描述：设置点击保存的回调
- */
+
 void saveConfigCallback() {
   Serial.println("Should save config");
   shouldSaveConfig = true;
@@ -449,80 +450,162 @@ void setup() {
       wm.addParameter(&custom_mqtt_Bid);
       wm.addParameter(&custom_mqtt_Address);
 
-      //fetches ssid and pass and tries to connect
-      //if it does not connect it starts an access point with the specified name
-      //here  "AutoConnectAP"
-      //and goes into a blocking loop awaiting configuration
       Serial.println("link to AP");
       if (!wm.autoConnect("FUNNYCHIP")) {
 
         Serial.println("failed to connect and hit timeout");
-        //reset and try again, or maybe put it to deep sleep
         ESP.restart();
         delay(100);
       }
 
       if (shouldSaveConfig) {
-        // 读取配置页面配置好的信息
-        strcpy(Address, custom_mqtt_Address.getValue());
-        strcpy(Bid, custom_mqtt_Bid.getValue());
-        for (int i = 0; i < 7; i++)
-          EEPROM.write(i, Address[i]);
-        for (int i = 7; i < 7 + 20; i++)
-          EEPROM.write(i, Bid[i - 7]);
+          oled.sendString("Saveing Config", 0, 0, ' ');
+          oled.sendString("Please Wait", 0, 1, ' ');
+          strcpy(Address, custom_mqtt_Address.getValue());
+          strcpy(Bid, custom_mqtt_Bid.getValue());
+          for (int i = 0; i < 7; i++)
+              EEPROM.write(i, Address[i]);
+          for (int i = 7; i < 7 + 20; i++)
+              EEPROM.write(i, Bid[i - 7]);
 
-        EEPROM.commit();
+          EEPROM.commit();
 
-        Serial.println("Save OK");
-        Serial.println(Address);
-        Serial.println(Bid);
+          Serial.println("Save OK");
+          Serial.println(Address);
+          Serial.println(Bid);
       }
-
     }
   }
   oled.sendString("Connected!",0,0,' ');
   oled.sendString("System Online",0,1,' ');
 
-  //if you get here you have connected to the WiFi
-  ticker.detach();
+  attachInterrupt(KEY_MENU, keyHandle, FALLING);
+  attachInterrupt(KEY_SW, keyHandle, FALLING);
+  attachInterrupt(KEY_MODE, keyHandle, FALLING);
 
-  attachInterrupt(KEY_MENU, keyHandle, CHANGE);
-  attachInterrupt(KEY_SW, keyHandle, CHANGE);
-  attachInterrupt(KEY_MODE, keyHandle, CHANGE);
-
-  oled.sendString("Get Time", 0, 0, ' ');
-  oled.sendString("NTP", 0, 1, ' ');
+  oled.sendString("Synchronous", 0, 0, ' ');
+  oled.sendString("Please Wait!", 0, 0, ' ');
   get_time(); //开机取一次时间
-  oled.sendString("Get Weather", 0, 0, ' ');
-  oled.sendString("Addr:", 0, 1, ' ');
-  oled.sendString(Address, 5, 1, ' ');
   get_weather(); //开机取一次天气
-  oled.sendString("Get Bilibili", 0, 0, ' ');
-  oled.sendString("Bid:", 0, 1, ' ');
-  oled.sendString(Bid, 4, 1, ' ');
   get_fans();//获取数据
 
-  binker.attach(1, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
-  shaker.attach_ms(10, shakeHandle); //初始化调度任务，每10毫秒执行一次shakeHandle()
+  ticker.attach_ms(500, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
+  shaker.attach_ms(20, shakeHandle); //初始化调度任务，每10毫秒执行一次shakeHandle()
   oled.sendString("                ", 0, 0);  //Now includes the cursor position data (col, row)
   oled.sendString("                ", 0, 1);  //Now includes the cursor position data (col, row)
+  MotionInit();
+  //oled.scrollString("12345678946513dsadsadsacxzczxasdqweq",0,100);
 }
 
 char tempstr[50];
 char weektab[][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
+
+int Current[10] = { 0 };
+int Target[10] = { 0 };
+
+void DampRun()
+{
+    int i;
+    for (i = 0; i < 10; i++)
+    {
+        if (Current[i] > Target[i])
+            Current[i] --;
+        else if (Current[i] < Target[i])
+            Current[i] ++;
+        else
+            Current[i] = Target[i];
+    }
+}
+
+void MotionInit()
+{
+    Current[0] = -8;
+    Current[1] = 8;
+    Current[2] = 8;
+    Current[3] = -17;//BiliBili:隐藏
+    Current[4] = 16;//BiliBili:隐藏
+    Current[5] = -16;
+}
+
+void MotionRun()
+{
+    switch (mode)
+    {
+    case date:
+        Target[5] = -16; 
+
+        Target[0] = 0;
+        Target[1] = 0;
+        Target[2] = 0;
+        
+        Current[3] = -17;//BiliBili:隐藏
+        Current[4] = 16;//BiliBili:隐藏
+        Target[3] = -17;//BiliBili:隐藏
+        Target[4] = 16;//BiliBili:隐藏
+        break;
+    case bfans:
+        Target[1] = 8;
+        Target[2] = 8;
+        Target[3] = 0;
+        Target[4] = 0;
+
+        Current[5] = -17;
+        Target[5] = -17;
+        break;
+    case weather:
+        Target[3] = -9-9;
+        Target[4] = -9;
+        Target[5] = 0;
+
+        Current[1] = 8;
+        Current[2] = 8;
+        Target[1] = 8;
+        Target[2] = 8;
+        break;
+    }
+}
 //time_t now;
 void loop() {
-  // put your main code here, to run repeatedly
-  get_key();//检测按键按下情况
-  //oled.sendString(weektab[crt->tm_mday],12,0);  //Now includes the cursor position data (col, row)
-  //strftime(tempstr, sizeof(tempstr), "%Y-%m-%d",crt);
-  //oled.sendString(tempstr, 1, 0);  //Now includes the cursor position data (col, row)
+    static int count = 0;
+    static long timecount = 0;
+    DampRun();
+    oled.clear(' ');
+    switch (mode)
+    {
+    case date:count = 0;
+        break;
+    case bfans:count = 0;
+        break;
+    case weather:
+        if (count++ > Allweathermsg.length()*4)
+        {
+            count = 0;
+        }
+        if(count%64==0)
+            Target[5] = count/4;
+        break;
+    }
+    oled.display(weektab[crt->tm_mday], Current[2] + 12, 0);
+    oled.display(datestr, 1, 0);
+    oled.display(now_temperatureunit.c_str(), Current[1] + 12, 1);
 
-  oled.sendString(ConvertWeather(now_weather).c_str(), 0, 0);
-  oled.sendString(now_temperature.c_str(), 8, 0);
+    oled.display("BiliBili:", Current[3] + 0, 0);
+    oled.display(fans.c_str(), Current[4] + 9, 0);
 
-  strftime(tempstr, sizeof(tempstr), "%H:%M:%S",crt);
-  oled.animotion(tempstr,7,0,0);     
-  oled.refrash_Screen();
-  delay(30);
+    oled.display(Allweathermsg.c_str(),  0-Current[5], 0);
+    oled.display(ConvertWeather(now_weather).c_str(), 11, 1);
+
+    oled.animotion(timestr, 7, 0, 0);
+    oled.refrash_Screen(Current[0] + 2, 1);
+
+    delay(20);
+    if (timecount++ > 50 * 600)
+    {
+        oled.sendString("Synchronous", 0, 0, ' ');
+        oled.sendString("Please Wait!", 0, 0, ' ');
+        get_time(); //时间
+        get_weather(); //天气
+        get_fans();//粉丝数
+        timecount = 0;
+    }
 }

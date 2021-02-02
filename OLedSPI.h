@@ -21,15 +21,16 @@ public:
 		~OLedSPI();
 
 		unsigned char checkdiff(unsigned char* array1,unsigned char* array2,int len);
-		void animotion(char* ch,int motion,int font,int mode);
+		void animotion(const char* ch,int motion,int font,int mode);
 
 		void init();
-		void refrash_Screen(void);
+		void refrash_Screen(int col, int row);
 		void write_CGRAM(uint8_t  a[]);
 		void sendCommand(unsigned char command);
 		void sendString(const char *String, uint8_t col, uint8_t row);
-    void sendString(const char *String, uint8_t col, uint8_t row,char ch);
-		void sendFloat(float digit, uint8_t dec, uint8_t nad, uint8_t col, uint8_t row);
+		void display(const char* ch, int col, int row);
+		void clear(char ch);
+		void sendString(const char *String, uint8_t col, uint8_t row,char ch);
 		void sendData(unsigned char data);
 		void clearLcd();
 		void cursPos(uint8_t, uint8_t); // cloumn, row

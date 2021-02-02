@@ -384,12 +384,8 @@ const unsigned char Fonts[][91*5]=
 
 0x00,0x74,0x7C,0x4C,0x00,}/*"z",90*/
 };
-
-
-
-
 //graphic
-unsigned char gram[][5] = 
+unsigned char gram[][5] =
 {
 	//��1�������
 	0x00,0x00,0x00,0x00,0x00,//��1���ַ�
@@ -402,7 +398,7 @@ unsigned char gram[][5] =
 	0x00,0x00,0x00,0x00,0x00,//��8���ַ�
 };
 //target
-unsigned char tram[][5] = 
+unsigned char tram[][5] =
 {
 	//��1�������
 	0x00,0x00,0x00,0x00,0x00,//��1���ַ�
@@ -415,7 +411,7 @@ unsigned char tram[][5] =
 	0x00,0x00,0x00,0x00,0x00,//��8���ַ�
 };
 //before
-unsigned char bram[][5] = 
+unsigned char bram[][5] =
 {
 	//��1�������
 	0x00,0x00,0x00,0x00,0x00,//��1���ַ�
@@ -428,10 +424,8 @@ unsigned char bram[][5] =
 	0x00,0x00,0x00,0x00,0x00,//��8���ַ�
 };
 
-//void spiwrite(uint8_t w_data)
-//{   
-//	HAL_SPI_Transmit(&hspi2,&w_data,1,2000);
-//}  
+//graphic
+char disram[16][2]= {0};
 
 uint8_t bytejudge(uint8_t a)
 {
@@ -448,20 +442,22 @@ unsigned char OLedSPI::checkdiff(unsigned char* array1,unsigned char* array2,int
 	}
 	return 1;
 }
-void OLedSPI::animotion(char* ch,int motion,int font,int mode)
+void OLedSPI::animotion(const char* ch,int motion,int font,int mode)
 {
 	int i,k;
 	static int animotionstep[20]={0};
 	
 	for(k=0;k<5;k++)
-		for(i=0;i<16;i++)
+		for(i=0;i<8;i++)
 		{
-			if(ch[i]!=0)
-				tram[i][k] = Fonts[font][(ch[i]-' ')*5+k];
+			if (ch[i] != 0)
+				tram[i][k] = Fonts[font][(ch[i] - ' ') * 5 + k];
+			else
+				tram[i][k] = 0;
 		}
 	for(k=0;k<16;k++)
 	{
-		if(checkdiff(gram[k],tram[k],4)==0)
+		if(checkdiff(gram[k],tram[k],5)==0)
 		{
 			switch(motion)
 			{
@@ -542,19 +538,19 @@ void OLedSPI::animotion(char* ch,int motion,int font,int mode)
 					gram[k][0] = tram[k][0];gram[k][1] = tram[k][1];gram[k][2] = tram[k][2];gram[k][3] = tram[k][3];gram[k][4] = tram[k][4];break;
 					default:animotionstep[k]=0;break;
 				}break;
-				case 3://��������
+				case 3://
 				for(i=0;i<5;i++) 
 				{
 					gram[k][i]<<=1;
 					gram[k][i]|=(tram[k][i]>>(7-animotionstep[k]))&1;
 				}break;
-				case 4://��������
+				case 4://
 				for(i=0;i<5;i++) 
 				{
 					gram[k][i]>>=1;
 					gram[k][i]|=(tram[k][i]<<(7-animotionstep[k]))&0x80;
 				}break;
-				case 5://��������
+				case 5://
 				for(i=0;i<4;i++) 
 				{
 					gram[k][i]=gram[k][i+1];
@@ -564,7 +560,7 @@ void OLedSPI::animotion(char* ch,int motion,int font,int mode)
 				else
 					gram[k][4]=0;
 				break;
-				case 6://��������
+				case 6://
 				for(i=4;i>0;i--) 
 				{
 					gram[k][i]=gram[k][i-1];
@@ -574,7 +570,7 @@ void OLedSPI::animotion(char* ch,int motion,int font,int mode)
 				else
 					gram[k][0]=0;
 				break;
-				case 7://��������
+				case 7://
 				for(i=0;i<5;i++) 
 				{
 					if(i<=animotionstep[k])
@@ -586,7 +582,7 @@ void OLedSPI::animotion(char* ch,int motion,int font,int mode)
 						}
 					}
 				}break;
-				case 8://��������
+				case 8://
 				for(i=0;i<5;i++) 
 				{
 					if(i<=animotionstep[k])
@@ -600,17 +596,25 @@ void OLedSPI::animotion(char* ch,int motion,int font,int mode)
 				}break;
 			}
 			animotionstep[k]++;
+			if (animotionstep[k] > 16)
+			{
+				for (i = 0; i < 5; i++)
+					gram[k][i] = tram[k][i];
+				animotionstep[k] = 0;
+			}
 			if(mode)
 				return;
 		}
 		else
 		{
-			for(i=0;i<5;i++) gram[k][i] = tram[k][i];animotionstep[k]=0;
+			for(i=0;i<5;i++) 
+				gram[k][i] = tram[k][i];
+			animotionstep[k]=0;
 		}
 	}
 }
 
-void OLedSPI::refrash_Screen(void)
+void OLedSPI::refrash_Screen(int col, int row)
 {
 	int i,j,k;
 	sendCommand(0x40);
@@ -622,9 +626,16 @@ void OLedSPI::refrash_Screen(void)
 		}//GRAM
 		sendData(0x00);
 	}
-	cursPos(2,1);
-	for(i=0;i<8;i++)
-		sendData(i);
+
+	for (i = 0; i < 8; i++)
+		if(col + i>=0)
+			disram[col + i][row] = i;
+	cursPos(0, 0);
+	for (i = 0; i < 16; i++)
+		sendData(disram[i][0]);
+	cursPos(0, 1);
+	for (i = 0; i < 16; i++)
+		sendData(disram[i][1]);
 }
 
 
@@ -642,12 +653,12 @@ int _ss_pin=SS;
 void OLedSPI::init() {
   SPI.begin();
 //  esp.begin();
-      pinMode(_ss_pin, OUTPUT);
-      digitalWrite(_ss_pin, HIGH);
-      pinMode(4, OUTPUT);
-      digitalWrite(4, LOW);
-      delay(100);
-      digitalWrite(4, HIGH);
+  pinMode(_ss_pin, OUTPUT);
+  digitalWrite(_ss_pin, HIGH);
+  pinMode(4, OUTPUT);
+  digitalWrite(4, LOW);
+  delay(100);
+  digitalWrite(4, HIGH);
    // *** SPI initial *** //
  sendCommand(0x2A);	// **** Set "RE"=1	00101010B
  sendCommand(0x71);  //Function Selection A
@@ -780,4 +791,25 @@ void OLedSPI::scrollString(char* message, uint8_t row, unsigned int time)//writt
  sendString(buffer, 0, row); //Edited by PG tho include the cursor pos within the sendString command
  delay(time);
  }
+}
+
+void OLedSPI::display(const char* ch,int col, int row)
+{
+	int j = 0;
+	while (ch[j])
+	{
+		if (col + j >= 0 && col + j < 16)
+		{
+			disram[col+j][row]= ch[j];
+		}
+		j++;
+	}
+}
+void OLedSPI::clear(char ch)
+{
+	int i;
+	for (i = 0; i < 16; i++)
+		disram[i][0]= ch;
+	for (i = 0; i < 16; i++)
+		disram[i][1]= ch;
 }
