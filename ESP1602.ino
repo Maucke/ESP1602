@@ -22,7 +22,8 @@ enum dis
 };
 
 dis mode = date;
-dis crtmode = date;
+int motiontye = 0;
+int fonttye = 0;
 OLedSPI oled;
 bool shouldSaveConfig = false;
 void ICACHE_RAM_ATTR keyHandle();
@@ -159,7 +160,7 @@ void get_weather() {
   if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
     //此处往下是取得实况天气的程序
     HTTPClient http;  //开始登陆 
-    //不要使用和下面相同的秘钥
+    //不要使用和下面相同的秘钥http://restapi.amap.com/v3/weather/weatherInfo?parameters&key=ac2f3457cc2d7928a8b4600e9759be1a&city=340207&extensions=base
 
     const char* HOST = "http://restapi.amap.com/v3/weather";
     String GetUrl = String(HOST) + "/weatherInfo?parameters&key=";
@@ -194,7 +195,7 @@ void get_weather() {
       now_wind_direction = lives_0_winddirection;   //当前风向
       now_wind_power = lives_0_windpower;   //当前风力
       now_reporttime = lives_0_reporttime;   //当前风力
-      now_reporttime = now_reporttime.substring(5, 19);   //当前风力
+      now_reporttime = now_reporttime.substring(10, 19);   //当前风力
       display_wind_power = now_wind_power.substring(3, 6);
     }
     http.end();
@@ -248,8 +249,8 @@ void get_weather() {
     http.end();   //关闭与服务器的连接
     delay(50);
   }
-  Allweathermsg = "Current Weather is " + ConvertWeather(now_weather) + "," + "Temp:" + now_temperatureunit + "," + "Humi:" + now_humidityunit + "," + "Wind Direction is " + ConvertWindDir(now_wind_direction) + ","\
-      + "Wind Power is "+ now_wind_power+","+"Update:"+ now_reporttime;
+  Allweathermsg = "Temp:" + now_temperatureunit + " " + "Humi:" + now_humidityunit + " " + "WindDir:" + ConvertWindDir(now_wind_direction) + " "\
+      + "Power:"+ display_wind_power +" "+"Update:"+ now_reporttime;
 }
 
 //****获取时间子函数
@@ -312,9 +313,15 @@ void get_fans() {
     delay(50);
   }
 }
-
+//void Delayms(u16 ms)
+//{
+//    u16 i, j;
+//    u8 k;
+//    for (i = 0; i < ms; i++)
+//        for (j = 0; j < 0x0500; j++) k++;
+//}
 void keyHandle() {
-  if (shake < 1)
+  if(shake<1)
   {
     if (digitalRead(KEY_SW) == LOW)
     {
@@ -334,6 +341,14 @@ void keyHandle() {
     }
     if (digitalRead(KEY_MODE) == LOW)
     {
+        motiontye++;
+        if (motiontye > 7)
+        {
+            motiontye = 0;
+            fonttye = 1 - fonttye;
+        }
+
+        motiontye %= 8;
       shake = 10;
     }
   }
@@ -386,117 +401,118 @@ void saveConfigCallback() {
 
 
 void setup() {
-  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
-  // put your setup code here, to run once:
-  Serial.begin(115200);
-  EEPROM.begin(1024);
-  oled.init();
-  //set led pin as output
-  pinMode(KEY_MENU, INPUT_PULLUP);
-  pinMode(KEY_SW, INPUT_PULLUP);
-  pinMode(KEY_MODE, INPUT_PULLUP);
-  // start ticker with 0.5 because we start in AP mode and try to connect
-  oled.sendString("Initialization",0,0,' ');
-  oled.sendString("Succeed!",0,1,' ');
-  delay(1000);
-  WiFiManager wm;//reset settings - for testing
-  if (digitalRead(KEY_MENU) == LOW)
-  {
-    wm.resetSettings();
-    Serial.println("Reset Config");
-    oled.sendString("Reset Config",0,0,' ');
-    oled.sendString("",0,1,' ');
+    WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
+    // put your setup code here, to run once:
+    Serial.begin(115200);
+    EEPROM.begin(1024);
+    oled.init();
+    //set led pin as output
+    pinMode(KEY_MENU, INPUT_PULLUP);
+    pinMode(KEY_SW, INPUT_PULLUP);
+    pinMode(KEY_MODE, INPUT_PULLUP);
+    // start ticker with 0.5 because we start in AP mode and try to connect
+    oled.sendString("Initialization", 0, 0, ' ');
+    oled.sendString("Succeed!", 0, 1, ' ');
     delay(1000);
-  }
-  wm.setConnectTimeout(60);  // 打印调试内容
-  wm.setDebugOutput(false); // 设置最小信号强度
-  wm.setMinimumSignalQuality(30); // 设置固定AP信息
-
-  if (EEPROM.read(0))
-  {
-    for (int i = 0; i < 7; i++)
-      Address[i] = EEPROM.read(i);
-    for (int i = 7; i < 7 + 20; i++)
-      Bid[i - 7] = EEPROM.read(i);
-  }
-
-  int Timeout = 0;
-  if(wm.getWiFiSSID(false)=="")
-    Timeout=40;
-  else
-  {
-    WiFi.begin(wm.getWiFiSSID(false), wm.getWiFiPass(false));
-    Serial.println("Wait");
-    oled.sendString("Connecting",0,0,' ');
-    oled.sendString("Please Wait",0,1,' ');
-    delay(1000);
-  }
-
-  while (WiFi.status() != WL_CONNECTED)//WiFi.status() ，这个函数是wifi连接状态，返回wifi链接状态
-  {
-    Serial.print(".");
-    delay(500);
-    if (Timeout++ >= 40)
+    WiFiManager wm;//reset settings - for testing
+    if (digitalRead(KEY_MENU) == LOW)
     {
-      oled.sendString("Please Connect",0,0,' ');
-      oled.sendString("WiFi:FunnyChip",0,1,' ');
-
-      wm.setAPCallback(configModeCallback);
-      wm.setSaveConfigCallback(saveConfigCallback);
-
-      WiFiManagerParameter custom_mqtt_Address("address", "WeatherAddress", Address, 7);
-      WiFiManagerParameter custom_mqtt_Bid("bilibiliID", "BiliBiliID", Bid, 20);
-
-      wm.addParameter(&custom_mqtt_Bid);
-      wm.addParameter(&custom_mqtt_Address);
-
-      Serial.println("link to AP");
-      if (!wm.autoConnect("FUNNYCHIP")) {
-
-        Serial.println("failed to connect and hit timeout");
-        ESP.restart();
-        delay(100);
-      }
-
-      if (shouldSaveConfig) {
-          oled.sendString("Saveing Config", 0, 0, ' ');
-          oled.sendString("Please Wait", 0, 1, ' ');
-          strcpy(Address, custom_mqtt_Address.getValue());
-          strcpy(Bid, custom_mqtt_Bid.getValue());
-          for (int i = 0; i < 7; i++)
-              EEPROM.write(i, Address[i]);
-          for (int i = 7; i < 7 + 20; i++)
-              EEPROM.write(i, Bid[i - 7]);
-
-          EEPROM.commit();
-
-          Serial.println("Save OK");
-          Serial.println(Address);
-          Serial.println(Bid);
-      }
+        wm.resetSettings();
+        Serial.println("Reset Config");
+        oled.sendString("Reset Config", 0, 0, ' ');
+        oled.sendString("", 0, 1, ' ');
+        delay(1000);
     }
-  }
-  oled.sendString("Connected!",0,0,' ');
-  oled.sendString("System Online",0,1,' ');
+    wm.setConnectTimeout(60);  // 打印调试内容
+    wm.setDebugOutput(false); // 设置最小信号强度
+    wm.setMinimumSignalQuality(30); // 设置固定AP信息
 
-  attachInterrupt(KEY_MENU, keyHandle, FALLING);
-  attachInterrupt(KEY_SW, keyHandle, FALLING);
-  attachInterrupt(KEY_MODE, keyHandle, FALLING);
+    if (EEPROM.read(0))
+    {
+        for (int i = 0; i < 7; i++)
+            Address[i] = EEPROM.read(i);
+        for (int i = 7; i < 7 + 20; i++)
+            Bid[i - 7] = EEPROM.read(i);
+    }
 
-  oled.sendString("Synchronous", 0, 0, ' ');
-  oled.sendString("Please Wait!", 0, 0, ' ');
-  get_time(); //开机取一次时间
-  get_weather(); //开机取一次天气
-  get_fans();//获取数据
+    int Timeout = 0;
+    if (wm.getWiFiSSID(false) == "")
+        Timeout = 40;
+    else
+    {
+        WiFi.begin(wm.getWiFiSSID(false), wm.getWiFiPass(false));
+        Serial.println("Wait");
+        oled.sendString("Connecting", 0, 0, ' ');
+        oled.sendString("Please Wait", 0, 1, ' ');
+        delay(1000);
+    }
 
-  ticker.attach_ms(500, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
-  shaker.attach_ms(20, shakeHandle); //初始化调度任务，每10毫秒执行一次shakeHandle()
-  oled.sendString("                ", 0, 0);  //Now includes the cursor position data (col, row)
-  oled.sendString("                ", 0, 1);  //Now includes the cursor position data (col, row)
-  MotionInit();
-  //oled.scrollString("12345678946513dsadsadsacxzczxasdqweq",0,100);
+    while (WiFi.status() != WL_CONNECTED)//WiFi.status() ，这个函数是wifi连接状态，返回wifi链接状态
+    {
+        Serial.print(".");
+        delay(500);
+        if (Timeout++ >= 40)
+        {
+            oled.sendString("Please Connect", 0, 0, ' ');
+            oled.sendString("WiFi:FunnyChip", 0, 1, ' ');
+
+            wm.setAPCallback(configModeCallback);
+            wm.setSaveConfigCallback(saveConfigCallback);
+
+            WiFiManagerParameter custom_mqtt_Address("address", "WeatherAddress", Address, 7);
+            WiFiManagerParameter custom_mqtt_Bid("bilibiliID", "BiliBiliID", Bid, 20);
+
+            wm.addParameter(&custom_mqtt_Bid);
+            wm.addParameter(&custom_mqtt_Address);
+
+            Serial.println("link to AP");
+            if (!wm.autoConnect("FUNNYCHIP")) {
+
+                Serial.println("failed to connect and hit timeout");
+                ESP.restart();
+                delay(100);
+            }
+
+            if (shouldSaveConfig) {
+                oled.sendString("Saveing Config", 0, 0, ' ');
+                oled.sendString("Please Wait", 0, 1, ' ');
+                strcpy(Address, custom_mqtt_Address.getValue());
+                strcpy(Bid, custom_mqtt_Bid.getValue());
+                for (int i = 0; i < 7; i++)
+                    EEPROM.write(i, Address[i]);
+                for (int i = 7; i < 7 + 20; i++)
+                    EEPROM.write(i, Bid[i - 7]);
+
+                EEPROM.commit();
+
+                Serial.println("Save OK");
+                Serial.println(Address);
+                Serial.println(Bid);
+            }
+        }
+    }
+    oled.sendString("Connected!", 0, 0, ' ');
+    oled.sendString("System Online", 0, 1, ' ');
+
+    attachInterrupt(KEY_MENU, keyHandle, FALLING);
+    attachInterrupt(KEY_SW, keyHandle, FALLING);
+    attachInterrupt(KEY_MODE, keyHandle, FALLING);
+
+    oled.sendString("Synchronous", 0, 0, ' ');
+    oled.sendString("Please Wait!", 0, 1, ' ');
+    get_time(); //开机取一次时间
+    oled.sendString("Time OK!", 0, 1, ' ');
+    get_weather(); //开机取一次天气
+    oled.sendString("Weather OK!", 0, 1, ' ');
+    get_fans();//获取数据
+    oled.sendString("BiliBili OK!", 0, 1, ' ');
+
+    ticker.attach_ms(500, tickerHandle); //初始化调度任务，每1秒执行一次tickerHandle()
+    shaker.attach_ms(20, shakeHandle); //初始化调度任务，每10毫秒执行一次shakeHandle()
+    oled.sendString("                ", 0, 0);  //Now includes the cursor position data (col, row)
+    oled.sendString("                ", 0, 1);  //Now includes the cursor position data (col, row)
+    MotionInit();
 }
-
 char tempstr[50];
 char weektab[][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
 
@@ -519,12 +535,23 @@ void DampRun()
 
 void MotionInit()
 {
-    Current[0] = -8;
     Current[1] = 8;
     Current[2] = 8;
     Current[3] = -17;//BiliBili:隐藏
     Current[4] = 16;//BiliBili:隐藏
     Current[5] = -16;
+    Current[6] = 5;
+    Target[0] = -8;
+    Target[1] = 8;
+    Target[2] = 8;
+    Target[3] = -17;//BiliBili:隐藏
+    Target[4] = 16;//BiliBili:隐藏
+    Target[5] = -16;
+    Target[6] = 5;
+    MotionRun();
+    Current[0] = -10;
+    Current[7] =-9;
+    Current[2] =16;
 }
 
 void MotionRun()
@@ -532,33 +559,38 @@ void MotionRun()
     switch (mode)
     {
     case date:
-        Target[5] = -16; 
-
+        Current[1] = 16;
+        Current[7] = 0-Current[5]-16;
+        Current[2] = Current[7];
         Target[0] = 0;
         Target[1] = 0;
         Target[2] = 0;
+        Target[7] = 0;
         
-        Current[3] = -17;//BiliBili:隐藏
-        Current[4] = 16;//BiliBili:隐藏
-        Target[3] = -17;//BiliBili:隐藏
-        Target[4] = 16;//BiliBili:隐藏
+        Current[3] = -24;//BiliBili:隐藏
+        Current[4] = 24;//BiliBili:隐藏
+        Target[3] = -24;//BiliBili:隐藏
+        Target[4] = 24;//BiliBili:隐藏
+        Target[5] = -16; 
+        Target[6] = 5;
         break;
     case bfans:
-        Target[1] = 8;
         Target[2] = 8;
         Target[3] = 0;
         Target[4] = 0;
 
         Current[5] = -17;
         Target[5] = -17;
+        Target[7] = -17;
         break;
     case weather:
-        Target[3] = -9-9;
-        Target[4] = -9;
+        Target[3] = -9;
+        Target[4] = -9-9;
         Target[5] = 0;
+        Current[6] = 13;
+        Target[6] = 0;
 
-        Current[1] = 8;
-        Current[2] = 8;
+        Target[1] = 8;
         Target[1] = 8;
         Target[2] = 8;
         break;
@@ -577,32 +609,33 @@ void loop() {
     case bfans:count = 0;
         break;
     case weather:
-        if (count++ > Allweathermsg.length()*4)
+        if (count++ > Allweathermsg.length()*8)
         {
+            Target[5] = 0;
             count = 0;
         }
-        if(count%64==0)
-            Target[5] = count/4;
+        if(count%128==0)
+            Target[5] = count/8;
         break;
     }
     oled.display(weektab[crt->tm_mday], Current[2] + 12, 0);
-    oled.display(datestr, 1, 0);
+    oled.display(datestr, Current[7] +1, 0);
     oled.display(now_temperatureunit.c_str(), Current[1] + 12, 1);
 
     oled.display("BiliBili:", Current[3] + 0, 0);
     oled.display(fans.c_str(), Current[4] + 9, 0);
 
     oled.display(Allweathermsg.c_str(),  0-Current[5], 0);
-    oled.display(ConvertWeather(now_weather).c_str(), 11, 1);
+    oled.display(ConvertWeather(now_weather).c_str(), Current[6] + 11, 1);
 
-    oled.animotion(timestr, 7, 0, 0);
+    oled.animotion(timestr, motiontye, fonttye, 0);
     oled.refrash_Screen(Current[0] + 2, 1);
 
     delay(20);
     if (timecount++ > 50 * 600)
     {
         oled.sendString("Synchronous", 0, 0, ' ');
-        oled.sendString("Please Wait!", 0, 0, ' ');
+        oled.sendString("Please Wait!", 0, 1, ' ');
         get_time(); //时间
         get_weather(); //天气
         get_fans();//粉丝数
