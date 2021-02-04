@@ -28,7 +28,7 @@ OLedSPI oled;
 bool shouldSaveConfig = false;
 void ICACHE_RAM_ATTR keyHandle();
 void ICACHE_RAM_ATTR shakeHandle();
- 
+
 #define KEY_MENU 5
 #define KEY_SW 4
 #define KEY_MODE 0
@@ -40,93 +40,93 @@ char Bid[20] = "49890113";
 
 u16 ConvertWeatherNum(String data_content)
 {
-  int i;
-  String weather_phenomena1[] = { "晴", "少云", "晴间多云", "多云", "阴", "有风", "平静", "微风", "和风", "清风", "强风/劲风", "疾风", "大风", "烈风", "风暴",
-    "狂爆风", "飓风", "热带风暴", "阵雨", "雷阵雨", "雷阵雨并伴有冰雹", "小雨", "中雨", "大雨", "暴雨", "大暴雨", "特大暴雨",
-    "强阵雨", "强雷阵雨", "极端降雨", "毛毛雨/细雨", "雨", "小雨-中雨", "中雨-大雨", "大雨-暴雨", "暴雨-大暴雨", "大暴雨-特大暴雨",
-    "雨雪天气", "雨夹雪", "阵雨夹雪", "冻雨", "雪", "阵雪", "小雪", "中雪", "大雪", "暴雪", "小雪-中雪", "中雪-大雪", "大雪-暴雪",
-    "浮尘", "扬沙", "沙尘暴", "强沙尘暴", "龙卷风", "雾", "浓雾", "强浓雾", "轻雾", "大雾", "特强浓雾", "霾", "中度霾", "重度霾",
-    "严重霾", "热", "冷", "未知" };
-  for (i = 0; i < 68; i++) {
+    int i;
+    String weather_phenomena1[] = { "晴", "少云", "晴间多云", "多云", "阴", "有风", "平静", "微风", "和风", "清风", "强风/劲风", "疾风", "大风", "烈风", "风暴",
+      "狂爆风", "飓风", "热带风暴", "阵雨", "雷阵雨", "雷阵雨并伴有冰雹", "小雨", "中雨", "大雨", "暴雨", "大暴雨", "特大暴雨",
+      "强阵雨", "强雷阵雨", "极端降雨", "毛毛雨/细雨", "雨", "小雨-中雨", "中雨-大雨", "大雨-暴雨", "暴雨-大暴雨", "大暴雨-特大暴雨",
+      "雨雪天气", "雨夹雪", "阵雨夹雪", "冻雨", "雪", "阵雪", "小雪", "中雪", "大雪", "暴雪", "小雪-中雪", "中雪-大雪", "大雪-暴雪",
+      "浮尘", "扬沙", "沙尘暴", "强沙尘暴", "龙卷风", "雾", "浓雾", "强浓雾", "轻雾", "大雾", "特强浓雾", "霾", "中度霾", "重度霾",
+      "严重霾", "热", "冷", "未知" };
+    for (i = 0; i < 68; i++) {
 
-    //Serial.println(data_content+" "+ weather_phenomena1[i]);
+        //Serial.println(data_content+" "+ weather_phenomena1[i]);
 
-    if (data_content.equals(weather_phenomena1[i])) {
-      return i;
+        if (data_content.equals(weather_phenomena1[i])) {
+            return i;
+        }
     }
-  }
 }
 
 String ConvertWeather(String data_content)
 {
-  int i;
-  String weather_phenomena1[] = { "晴", "少云", "晴间多云", "多云", "阴", "有风", "平静", "微风", "和风", "清风", "强风/劲风", "疾风", "大风", "烈风", "风暴",
-    "狂爆风", "飓风", "热带风暴", "阵雨", "雷阵雨", "雷阵雨并伴有冰雹", "小雨", "中雨", "大雨", "暴雨", "大暴雨", "特大暴雨",
-    "强阵雨", "强雷阵雨", "极端降雨", "毛毛雨/细雨", "雨", "小雨-中雨", "中雨-大雨", "大雨-暴雨", "暴雨-大暴雨", "大暴雨-特大暴雨",
-    "雨雪天气", "雨夹雪", "阵雨夹雪", "冻雨", "雪", "阵雪", "小雪", "中雪", "大雪", "暴雪", "小雪-中雪", "中雪-大雪", "大雪-暴雪",
-    "浮尘", "扬沙", "沙尘暴", "强沙尘暴", "龙卷风", "雾", "浓雾", "强浓雾", "轻雾", "大雾", "特强浓雾", "霾", "中度霾", "重度霾",
-    "严重霾", "热", "冷", "未知" };
-  for (i = 0; i < 68; i++) {
+    int i;
+    String weather_phenomena1[] = { "晴", "少云", "晴间多云", "多云", "阴", "有风", "平静", "微风", "和风", "清风", "强风/劲风", "疾风", "大风", "烈风", "风暴",
+      "狂爆风", "飓风", "热带风暴", "阵雨", "雷阵雨", "雷阵雨并伴有冰雹", "小雨", "中雨", "大雨", "暴雨", "大暴雨", "特大暴雨",
+      "强阵雨", "强雷阵雨", "极端降雨", "毛毛雨/细雨", "雨", "小雨-中雨", "中雨-大雨", "大雨-暴雨", "暴雨-大暴雨", "大暴雨-特大暴雨",
+      "雨雪天气", "雨夹雪", "阵雨夹雪", "冻雨", "雪", "阵雪", "小雪", "中雪", "大雪", "暴雪", "小雪-中雪", "中雪-大雪", "大雪-暴雪",
+      "浮尘", "扬沙", "沙尘暴", "强沙尘暴", "龙卷风", "雾", "浓雾", "强浓雾", "轻雾", "大雾", "特强浓雾", "霾", "中度霾", "重度霾",
+      "严重霾", "热", "冷", "未知" };
+    for (i = 0; i < 68; i++) {
 
-    if (data_content.equals(weather_phenomena1[i])) {
-      break;
+        if (data_content.equals(weather_phenomena1[i])) {
+            break;
+        }
     }
-  }
-  if (i == 0) {
-    return "Sunny";  //晴
-  }
-  else if (i >= 1 && i <= 3) {
-    return "Cloudy";  //多云
-  }
-  else if (i == 4) {
-    return "Cast";   //阴
-  }
-  else if (i >= 5 && i <= 17) {
-    return "Gale";    //风
-  }
-  else if (i >= 18 && i <= 40) {
-    return "Rain";   //雨
-  }
-  else if (i >= 41 && i <= 49) {
-    return "Snow";   //雪
-  }
-  else if (i >= 50 && i <= 54) {
-    return "Dust";  //沙尘
-  }
-  else if (i >= 55 && i <= 60) {
-    return "Fog";   //雾
-  }
-  else if (i >= 61 && i <= 64) {
-    return "Haze";   //霾
-  }
-  else {
-    return "Unknown";   //未知
-  }
+    if (i == 0) {
+        return "Sunny ";  //晴
+    }
+    else if (i >= 1 && i <= 3) {
+        return "Cloudy";  //多云
+    }
+    else if (i == 4) {
+        return " Cast ";   //阴
+    }
+    else if (i >= 5 && i <= 17) {
+        return " Gale ";    //风
+    }
+    else if (i >= 18 && i <= 40) {
+        return " Rain ";   //雨
+    }
+    else if (i >= 41 && i <= 49) {
+        return " Snow ";   //雪
+    }
+    else if (i >= 50 && i <= 54) {
+        return " Dust ";  //沙尘
+    }
+    else if (i >= 55 && i <= 60) {
+        return " Fog  ";   //雾
+    }
+    else if (i >= 61 && i <= 64) {
+        return " Haze ";   //霾
+    }
+    else {
+        return "Unknow";   //未知
+    }
 }
 
 String ConvertWindDir(String data_content)
 {
-  int i;
-  String direction_phenomena1[] = { "无风向", "东北", "东", "东南", "南", "西南", "西", "西北", "北", "旋转不定", "未知" };
-  for (i = 0; i < 11; i++) {
-    if (data_content.equals(direction_phenomena1[i])) {
-      break;
+    int i;
+    String direction_phenomena1[] = { "无风向", "东北", "东", "东南", "南", "西南", "西", "西北", "北", "旋转不定", "未知" };
+    for (i = 0; i < 11; i++) {
+        if (data_content.equals(direction_phenomena1[i])) {
+            break;
+        }
     }
-  }
-  switch (i)
-  {
-  case 0:return "Breezeless";
-  case 1:return "Northeast";
-  case 2:return "East";
-  case 3:return "Southeast";
-  case 4:return "South";
-  case 5:return "Southwest";
-  case 6:return "West";
-  case 7:return "Northwest";
-  case 8:return "North";
-  case 9:return "Uncertain";
-  case 10:return "Unknown";
-  }
+    switch (i)
+    {
+    case 0:return "Breezeless";
+    case 1:return "Northeast";
+    case 2:return "East";
+    case 3:return "Southeast";
+    case 4:return "South";
+    case 5:return "Southwest";
+    case 6:return "West";
+    case 7:return "Northwest";
+    case 8:return "North";
+    case 9:return "Uncertain";
+    case 10:return "Unknown";
+    }
 }
 
 String now_weather;    //当前天气
@@ -157,100 +157,100 @@ String third_nighttemp;
 String Allweathermsg;
 //****获取天气子函数 
 void get_weather() {
-  if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
-    //此处往下是取得实况天气的程序
-    HTTPClient http;  //开始登陆 
-    //不要使用和下面相同的秘钥http://restapi.amap.com/v3/weather/weatherInfo?parameters&key=ac2f3457cc2d7928a8b4600e9759be1a&city=340207&extensions=base
+    if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
+      //此处往下是取得实况天气的程序
+        HTTPClient http;  //开始登陆 
+        //不要使用和下面相同的秘钥http://restapi.amap.com/v3/weather/weatherInfo?parameters&key=ac2f3457cc2d7928a8b4600e9759be1a&city=340207&extensions=base
 
-    const char* HOST = "http://restapi.amap.com/v3/weather";
-    String GetUrl = String(HOST) + "/weatherInfo?parameters&key=";
-    GetUrl += String(Key);
-    GetUrl += "&city=";
-    GetUrl += String(Address);
-    GetUrl += "&extensions=";
+        const char* HOST = "http://restapi.amap.com/v3/weather";
+        String GetUrl = String(HOST) + "/weatherInfo?parameters&key=";
+        GetUrl += String(Key);
+        GetUrl += "&city=";
+        GetUrl += String(Address);
+        GetUrl += "&extensions=";
 
-    http.begin(GetUrl + "base");  //高德开放平台提供服务 
-    int httpget_now = http.GET(); //赋值
-    if (httpget_now > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
-      /*数据解析:使用 https://arduinojson.org/assistant/ 一个工具可以直接生成程序，挑有用的复制就行*/
-      const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(9) + 210;
-      DynamicJsonBuffer jsonBuffer(capacity);
+        http.begin(GetUrl + "base");  //高德开放平台提供服务 
+        int httpget_now = http.GET(); //赋值
+        if (httpget_now > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
+          /*数据解析:使用 https://arduinojson.org/assistant/ 一个工具可以直接生成程序，挑有用的复制就行*/
+            const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(9) + 210;
+            DynamicJsonBuffer jsonBuffer(capacity);
 
-      JsonObject& root = jsonBuffer.parseObject(http.getString());
+            JsonObject& root = jsonBuffer.parseObject(http.getString());
 
-      JsonObject& lives_0 = root["lives"][0];
-      const char* lives_0_weather = lives_0["weather"]; // "天气情况"
-      const char* lives_0_temperature = lives_0["temperature"]; // "温度"
-      const char* lives_0_humidity = lives_0["humidity"]; // "风力"
-      const char* lives_0_winddirection = lives_0["winddirection"]; // "风向"
-      const char* lives_0_windpower = lives_0["windpower"]; // "风力"
-      const char* lives_0_reporttime = lives_0["reporttime"]; // "风力"
+            JsonObject& lives_0 = root["lives"][0];
+            const char* lives_0_weather = lives_0["weather"]; // "天气情况"
+            const char* lives_0_temperature = lives_0["temperature"]; // "温度"
+            const char* lives_0_humidity = lives_0["humidity"]; // "风力"
+            const char* lives_0_winddirection = lives_0["winddirection"]; // "风向"
+            const char* lives_0_windpower = lives_0["windpower"]; // "风力"
+            const char* lives_0_reporttime = lives_0["reporttime"]; // "风力"
 
-      //赋值，因为现在这些变量是在缓存区，一会将被清空
-      now_weather = lives_0_weather;    //当前天气
-      now_temperature = lives_0_temperature;    //当前温度
-      now_temperatureunit = now_temperature + "c";
-      now_humidity = lives_0_humidity;    //当前温度
-      now_humidityunit = now_humidity + "%";
-      now_wind_direction = lives_0_winddirection;   //当前风向
-      now_wind_power = lives_0_windpower;   //当前风力
-      now_reporttime = lives_0_reporttime;   //当前风力
-      now_reporttime = now_reporttime.substring(10, 19);   //当前风力
-      display_wind_power = now_wind_power.substring(3, 6);
+            //赋值，因为现在这些变量是在缓存区，一会将被清空
+            now_weather = lives_0_weather;    //当前天气
+            now_temperature = lives_0_temperature;    //当前温度
+            now_temperatureunit = now_temperature + "c";
+            now_humidity = lives_0_humidity;    //当前温度
+            now_humidityunit = now_humidity + "%";
+            now_wind_direction = lives_0_winddirection;   //当前风向
+            now_wind_power = lives_0_windpower;   //当前风力
+            now_reporttime = lives_0_reporttime;   //当前风力
+            now_reporttime = now_reporttime.substring(10, 19);   //当前风力
+            display_wind_power = now_wind_power.substring(3, 6);
+        }
+        http.end();
+        delay(50);
+
+        //此处往下是取得未来三天的天气的程序
+        http.begin(GetUrl + "all");  //高德开放平台提供服务 
+        int httpget_threedays = http.GET(); //赋值 
+        if (httpget_threedays > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
+            const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_ARRAY_SIZE(4) + 2 * JSON_OBJECT_SIZE(5) + 4 * JSON_OBJECT_SIZE(10) + 690;
+            DynamicJsonBuffer jsonBuffer(capacity);
+            JsonObject& root = jsonBuffer.parseObject(http.getString());
+            JsonObject& forecasts_0 = root["forecasts"][0];
+            JsonArray& forecasts_0_casts = forecasts_0["casts"];
+
+            JsonObject& forecasts_0_casts_1 = forecasts_0_casts[1]; //明天天气
+            const char* forecasts_0_casts_1_week = forecasts_0_casts_1["week"]; // "1"
+            const char* forecasts_0_casts_1_dayweather = forecasts_0_casts_1["dayweather"]; // "多云"
+            const char* forecasts_0_casts_1_daytemp = forecasts_0_casts_1["daytemp"]; // "22"
+            const char* forecasts_0_casts_1_nighttemp = forecasts_0_casts_1["nighttemp"]; // "10"
+
+            JsonObject& forecasts_0_casts_2 = forecasts_0_casts[2]; //后天天气
+            const char* forecasts_0_casts_2_week = forecasts_0_casts_2["week"]; // "2"
+            const char* forecasts_0_casts_2_dayweather = forecasts_0_casts_2["dayweather"]; // "晴"
+            const char* forecasts_0_casts_2_daytemp = forecasts_0_casts_2["daytemp"]; // "19"
+            const char* forecasts_0_casts_2_nighttemp = forecasts_0_casts_2["nighttemp"]; // "10"
+
+            JsonObject& forecasts_0_casts_3 = forecasts_0_casts[3]; //大后天天气
+            const char* forecasts_0_casts_3_week = forecasts_0_casts_3["week"]; // "3"
+            const char* forecasts_0_casts_3_dayweather = forecasts_0_casts_3["dayweather"]; // "晴"
+            const char* forecasts_0_casts_3_daytemp = forecasts_0_casts_3["daytemp"]; // "25"
+            const char* forecasts_0_casts_3_nighttemp = forecasts_0_casts_3["nighttemp"]; // "14"
+
+            //****赋值
+            //第一天数据
+            first_week = forecasts_0_casts_1_week;
+            first_dayweather = forecasts_0_casts_1_dayweather;
+            first_daytemp = forecasts_0_casts_1_daytemp;
+            first_nighttemp = forecasts_0_casts_1_nighttemp;
+            //第二天数据
+            second_week = forecasts_0_casts_2_week;
+            second_dayweather = forecasts_0_casts_2_dayweather;
+            second_daytemp = forecasts_0_casts_2_daytemp;
+            second_nighttemp = forecasts_0_casts_2_nighttemp;
+            //第三天数据
+            third_week = forecasts_0_casts_3_week;
+            third_dayweather = forecasts_0_casts_3_dayweather;
+            third_daytemp = forecasts_0_casts_3_daytemp;
+            third_nighttemp = forecasts_0_casts_3_nighttemp;
+        }
+        http.end();   //关闭与服务器的连接
+        delay(50);
     }
-    http.end();
-    delay(50);
-
-    //此处往下是取得未来三天的天气的程序
-    http.begin(GetUrl + "all");  //高德开放平台提供服务 
-    int httpget_threedays = http.GET(); //赋值 
-    if (httpget_threedays > 0) { //检查一下是否为0，应该是去检查缓存区是否为空
-      const size_t capacity = JSON_ARRAY_SIZE(1) + JSON_ARRAY_SIZE(4) + 2 * JSON_OBJECT_SIZE(5) + 4 * JSON_OBJECT_SIZE(10) + 690;
-      DynamicJsonBuffer jsonBuffer(capacity);
-      JsonObject& root = jsonBuffer.parseObject(http.getString());
-      JsonObject& forecasts_0 = root["forecasts"][0];
-      JsonArray& forecasts_0_casts = forecasts_0["casts"];
-
-      JsonObject& forecasts_0_casts_1 = forecasts_0_casts[1]; //明天天气
-      const char* forecasts_0_casts_1_week = forecasts_0_casts_1["week"]; // "1"
-      const char* forecasts_0_casts_1_dayweather = forecasts_0_casts_1["dayweather"]; // "多云"
-      const char* forecasts_0_casts_1_daytemp = forecasts_0_casts_1["daytemp"]; // "22"
-      const char* forecasts_0_casts_1_nighttemp = forecasts_0_casts_1["nighttemp"]; // "10"
-
-      JsonObject& forecasts_0_casts_2 = forecasts_0_casts[2]; //后天天气
-      const char* forecasts_0_casts_2_week = forecasts_0_casts_2["week"]; // "2"
-      const char* forecasts_0_casts_2_dayweather = forecasts_0_casts_2["dayweather"]; // "晴"
-      const char* forecasts_0_casts_2_daytemp = forecasts_0_casts_2["daytemp"]; // "19"
-      const char* forecasts_0_casts_2_nighttemp = forecasts_0_casts_2["nighttemp"]; // "10"
-
-      JsonObject& forecasts_0_casts_3 = forecasts_0_casts[3]; //大后天天气
-      const char* forecasts_0_casts_3_week = forecasts_0_casts_3["week"]; // "3"
-      const char* forecasts_0_casts_3_dayweather = forecasts_0_casts_3["dayweather"]; // "晴"
-      const char* forecasts_0_casts_3_daytemp = forecasts_0_casts_3["daytemp"]; // "25"
-      const char* forecasts_0_casts_3_nighttemp = forecasts_0_casts_3["nighttemp"]; // "14"
-
-      //****赋值
-      //第一天数据
-      first_week = forecasts_0_casts_1_week;
-      first_dayweather = forecasts_0_casts_1_dayweather;
-      first_daytemp = forecasts_0_casts_1_daytemp;
-      first_nighttemp = forecasts_0_casts_1_nighttemp;
-      //第二天数据
-      second_week = forecasts_0_casts_2_week;
-      second_dayweather = forecasts_0_casts_2_dayweather;
-      second_daytemp = forecasts_0_casts_2_daytemp;
-      second_nighttemp = forecasts_0_casts_2_nighttemp;
-      //第三天数据
-      third_week = forecasts_0_casts_3_week;
-      third_dayweather = forecasts_0_casts_3_dayweather;
-      third_daytemp = forecasts_0_casts_3_daytemp;
-      third_nighttemp = forecasts_0_casts_3_nighttemp;
-    }
-    http.end();   //关闭与服务器的连接
-    delay(50);
-  }
-  Allweathermsg = "Temp:" + now_temperatureunit + " " + "Humi:" + now_humidityunit + " " + "WindDir:" + ConvertWindDir(now_wind_direction) + " "\
-      + "Power:"+ display_wind_power +" "+"Update:"+ now_reporttime;
+    Allweathermsg = "Temp:" + now_temperatureunit + " " + "Humi:" + now_humidityunit + " " + "WindDir:" + ConvertWindDir(now_wind_direction) + " "\
+        + "Power:" + display_wind_power + " " + "Update:" + now_reporttime;
 }
 
 //****获取时间子函数
@@ -287,31 +287,31 @@ void get_time() {
 
 String fans;
 void get_fans() {
-  if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
-    HTTPClient http;  //开始登陆 
-    //不要使用和下面相同的秘钥
+    if (WiFi.status() == WL_CONNECTED) { //如果 Wi-Fi 连接成功
+        HTTPClient http;  //开始登陆 
+        //不要使用和下面相同的秘钥
 
-    const char* HOST = "http://api.bilibili.com";
-    String GetUrl = String(HOST) + "/x/relation/stat?vmid=";
-    GetUrl += String(Bid);
+        const char* HOST = "http://api.bilibili.com";
+        String GetUrl = String(HOST) + "/x/relation/stat?vmid=";
+        GetUrl += String(Bid);
 
-    http.begin(GetUrl);
-    int httpCode = http.GET();
+        http.begin(GetUrl);
+        int httpCode = http.GET();
 
-    //    Serial.println(http.getString());
-    if (httpCode == 200) {
-      String resBuff = http.getString();
-      DynamicJsonBuffer jsonBuffer(200);
-      JsonObject& root = jsonBuffer.parseObject(resBuff);
+        //    Serial.println(http.getString());
+        if (httpCode == 200) {
+            String resBuff = http.getString();
+            DynamicJsonBuffer jsonBuffer(200);
+            JsonObject& root = jsonBuffer.parseObject(resBuff);
 
-      String msg = root["message"];
-      //uint message = msg.toInt();;
-      const char* fanstemp = root["data"]["follower"]; 
-      fans = fanstemp;
+            String msg = root["message"];
+            //uint message = msg.toInt();;
+            const char* fanstemp = root["data"]["follower"];
+            fans = fanstemp;
+        }
+        http.end();
+        delay(50);
     }
-    http.end();
-    delay(50);
-  }
 }
 //void Delayms(u16 ms)
 //{
@@ -320,38 +320,44 @@ void get_fans() {
 //    for (i = 0; i < ms; i++)
 //        for (j = 0; j < 0x0500; j++) k++;
 //}
-void keyHandle() {
-  if(shake<1)
-  {
-    if (digitalRead(KEY_SW) == LOW)
-    {
-      shake = 10;
-      
-      if (mode == date)
-          mode = bfans;
-      else if (mode == bfans)
-          mode = weather;
-      else if (mode == weather)
-          mode = date;
-      MotionRun();
-    }
-    if (digitalRead(KEY_MENU) == LOW)
-    {
-      shake = 10;
-    }
-    if (digitalRead(KEY_MODE) == LOW)
-    {
-        motiontye++;
-        if (motiontye > 7)
-        {
-            motiontye = 0;
-            fonttye = 1 - fonttye;
-        }
 
-        motiontye %= 8;
-      shake = 10;
+#define SHACKECOUNT 20
+
+void keyHandle() {
+    if (shake < 1)
+    {
+        if (digitalRead(KEY_SW) == LOW)
+        {
+
+            if (mode == date)
+                mode = bfans;
+            else if (mode == bfans)
+                mode = weather;
+            else if (mode == weather)
+                mode = date;
+            MotionRun();
+            shake = SHACKECOUNT;
+        }
+        if (digitalRead(KEY_MENU) == LOW)
+        {
+            fonttye++;
+            fonttye %= 5;
+            EEPROM.write(31, fonttye);
+            EEPROM.commit();
+            shake = SHACKECOUNT;
+        }
+        if (digitalRead(KEY_MODE) == LOW)
+        {
+            motiontye++;
+            if (motiontye > 8)
+            {
+                motiontye = 0;
+            }
+            EEPROM.write(30, motiontye);
+            EEPROM.commit();
+            shake = SHACKECOUNT;
+        }
     }
-  }
 }
 
 char timestr[40] = "";
@@ -372,7 +378,7 @@ void tickerHandle() //到时间时需要执行的任务
                 crt->tm_min = 0;
                 get_time();
                 get_fans();
-                get_weather(); 
+                get_weather();
             }
         }
         strftime(timestr, sizeof(timestr), "%H:%M:%S", crt);
@@ -383,20 +389,20 @@ void tickerHandle() //到时间时需要执行的任务
 }
 void shakeHandle() //到时间时需要执行的任务
 {
-  if (shake > 0)
-    shake--;
+    if (shake > 0)
+        shake--;
 }
 
 
 void configModeCallback(WiFiManager* myWiFiManager) {
-  Serial.println("Entered config mode");
-  Serial.println(WiFi.softAPIP());
-  Serial.println(myWiFiManager->getConfigPortalSSID());
+    Serial.println("Entered config mode");
+    Serial.println(WiFi.softAPIP());
+    Serial.println(myWiFiManager->getConfigPortalSSID());
 }
 
 void saveConfigCallback() {
-  Serial.println("Should save config");
-  shouldSaveConfig = true;
+    Serial.println("Should save config");
+    shouldSaveConfig = true;
 }
 
 
@@ -433,6 +439,9 @@ void setup() {
             Address[i] = EEPROM.read(i);
         for (int i = 7; i < 7 + 20; i++)
             Bid[i - 7] = EEPROM.read(i);
+        motiontye = EEPROM.read(30);
+        fonttye = EEPROM.read(31);
+
     }
 
     int Timeout = 0;
@@ -540,18 +549,18 @@ void MotionInit()
     Current[3] = -17;//BiliBili:隐藏
     Current[4] = 16;//BiliBili:隐藏
     Current[5] = -16;
-    Current[6] = 5;
+    Current[6] = 6;
     Target[0] = -8;
     Target[1] = 8;
     Target[2] = 8;
     Target[3] = -17;//BiliBili:隐藏
     Target[4] = 16;//BiliBili:隐藏
     Target[5] = -16;
-    Target[6] = 5;
+    Target[6] = 6;
     MotionRun();
     Current[0] = -10;
-    Current[7] =-9;
-    Current[2] =16;
+    Current[7] = -9;
+    Current[2] = 16;
 }
 
 void MotionRun()
@@ -560,19 +569,19 @@ void MotionRun()
     {
     case date:
         Current[1] = 16;
-        Current[7] = 0-Current[5]-16;
+        Current[7] = 0 - Current[5] - 16;
         Current[2] = Current[7];
         Target[0] = 0;
         Target[1] = 0;
         Target[2] = 0;
         Target[7] = 0;
-        
+
         Current[3] = -24;//BiliBili:隐藏
         Current[4] = 24;//BiliBili:隐藏
         Target[3] = -24;//BiliBili:隐藏
         Target[4] = 24;//BiliBili:隐藏
-        Target[5] = -16; 
-        Target[6] = 5;
+        Target[5] = -16;
+        Target[6] = 6;
         break;
     case bfans:
         Target[2] = 8;
@@ -584,10 +593,11 @@ void MotionRun()
         Target[7] = -17;
         break;
     case weather:
+        Target[0] = -1;
         Target[3] = -9;
-        Target[4] = -9-9;
+        Target[4] = -9 - 9;
         Target[5] = 0;
-        Current[6] = 13;
+        Current[6] = 14;
         Target[6] = 0;
 
         Target[1] = 8;
@@ -609,24 +619,24 @@ void loop() {
     case bfans:count = 0;
         break;
     case weather:
-        if (count++ > Allweathermsg.length()*8)
+        if (count++ > Allweathermsg.length() * 8)
         {
             Target[5] = 0;
             count = 0;
         }
-        if(count%128==0)
-            Target[5] = count/8;
+        if (count % 128 == 0)
+            Target[5] = count / 8;
         break;
     }
     oled.display(weektab[crt->tm_mday], Current[2] + 12, 0);
-    oled.display(datestr, Current[7] +1, 0);
+    oled.display(datestr, Current[7] + 1, 0);
     oled.display(now_temperatureunit.c_str(), Current[1] + 12, 1);
 
     oled.display("BiliBili:", Current[3] + 0, 0);
     oled.display(fans.c_str(), Current[4] + 9, 0);
 
-    oled.display(Allweathermsg.c_str(),  0-Current[5], 0);
-    oled.display(ConvertWeather(now_weather).c_str(), Current[6] + 11, 1);
+    oled.display(Allweathermsg.c_str(), 0 - Current[5], 0);
+    oled.display(ConvertWeather(now_weather).c_str(), Current[6] + 10, 1);
 
     oled.animotion(timestr, motiontye, fonttye, 0);
     oled.refrash_Screen(Current[0] + 2, 1);
